@@ -1,0 +1,51 @@
+Sets the desired active power set point percentage for the system.
+---
+
+parameters:
+  - in: body
+    name: body
+    description: Request body
+    required: true
+    schema:
+      type: object
+      properties:
+        value:
+          type: integer
+          description: The desired active power set point percentage (between 0 and 100).
+
+# Expected response formats
+produces:
+  - application/json
+
+# Success response definition
+responses:
+  200:
+    description: Successful update
+    content:
+      application/json:
+        schema:
+          type: object
+          # Assuming the response data has the same structure as in get_data.yml
+          # You can replace this with the actual schema from your function
+
+  # Error responses
+  400:
+    description: Bad request
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              description: Error message (e.g., "Invalid value")
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              description: Error message

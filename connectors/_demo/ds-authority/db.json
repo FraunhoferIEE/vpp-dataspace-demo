@@ -1,0 +1,12 @@
+{
+  "fcn-directory": [
+    {
+      "name": "DER Connector",
+      "id": "der-connector",
+      "url": "http://der-connector:8282/api/v1/dsp",
+      "supportedProtocols": [
+        "dataspace-protocol-http"
+      ]
+    }
+  ]
+}

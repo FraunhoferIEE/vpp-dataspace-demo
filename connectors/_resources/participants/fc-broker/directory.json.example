@@ -1,0 +1,10 @@
+[
+ {
+    "name": "A name to identify the participant",
+    "id": "any-sting-is-allowed",
+    "url": "http://participant-1:8282/protocol",
+    "supportedProtocols": [
+      "dataspace-protocol-http"
+    ]
+  },
+]

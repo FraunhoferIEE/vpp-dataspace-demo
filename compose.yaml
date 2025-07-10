@@ -1,0 +1,188 @@
+name: demonstrator-vpp-dspace-paper
+
+services:
+
+  # A simple JSON server that serves a list of available federated catalog nodes. 
+  # This is list is used by the EDC connectors to discover data offers in the federated network.
+  ds-authority:
+    image: vimagick/json-server:latest
+    command: -h 0.0.0.0 -p 8080 -w db.json
+    ports:
+      - "9999:8080"
+    volumes:
+      - './backends/ds-authority/db.json:/data/db.json'
+
+  # EDC Connector of the plant operator
+  der-connector:
+    build:
+      context: ./connectors
+      dockerfile: '/launchers/der-connector/Dockerfile'
+    ports:
+      - '18181:8181'  # Default API / Management API
+      - '18282:8282'  # Protocol API
+      - '18185:8185'  # Public Data Plane API
+      - '19191:9191'  # Control Plane API
+    env_file:
+      - './connectors/_demo/der-connector/conf.env'
+    volumes:
+      - './connectors/_demo/der-connector/config:/app/config'
+
+  # A generic Modbus TCP server that simulates a PV plant or other DERs.
+  der-modbus:
+    image: techplex/modbus-sim:latest
+    ports:
+      - "1502:1502"
+
+  # A simple Flask app that acts as a REST API for the Modbus TCP server.
+  # This is the primary data source that is shared by the plant operator with the energy trading companies.
+  der-rest-api:
+    build:
+      context: ./backends/modbus-rest-adapter
+      dockerfile: 'Dockerfile'
+    ports:
+      - "5000:5000"
+    environment:
+      MODBUS_HOST: der-modbus
+      MODBUS_PORT: 1502
+      MODBUS_UNIT_ID: 1
+      MAPPING_TYPE: sim
+    depends_on:
+      - der-modbus
+
+  # A react-based UI that allows to plant operator to interfact with its Connector.
+  der-connector-app:
+    build:
+      context: ./frontends/der-connector-app
+      dockerfile: 'Dockerfile'
+      args:
+        - TARGET=der1
+    ports:
+      - "8010:8080"
+    depends_on:
+      - der-connector
+
+  
+  # EDC Connector of the first energy trading company 
+  et1-connector:
+    build:
+      context: ./connectors
+      dockerfile: '/launchers/et-connector/Dockerfile'
+    ports:
+      - '28181:8181'  # Default API / Management API
+      - '28282:8282'  # Protocol API
+      - '28185:8185'  # Public Data Plane API
+      - '29191:9191'  # Control Plane API
+    env_file:
+      - './connectors/_demo/et1-connector/conf.env'
+    volumes:
+      - './connectors/_demo/et1-connector/config:/app/config'
+
+  et1-connector-app:
+    build:
+      context: ./frontends/et-connector-app
+      dockerfile: 'Dockerfile'
+      args:
+        - TARGET=et1
+    ports:
+      - "8020:8080"
+    depends_on:
+      - et1-connector
+      - et1-vpp-ems
+
+
+  # This is a simple Flask app that provides basic functionality of an EMS.
+  # It aggregates the data from the connected DERs perdiodiocally and sends control commands to them
+  et1-vpp-ems:
+    build:
+      context: ./backends/vpp-ems
+      dockerfile: 'Dockerfile'
+    ports:
+      - "5010:5000"
+    environment:
+      MONGODB_URI: mongodb://root:secret1234@et1-vpp-mongodb:27017/dspace?authSource=admin
+      LOG_LEVEL: INFO
+      PULL_INTERVAL_SECONDS: 10
+      HTTP_TIMEOUT_SECONDS: 2
+    depends_on:
+      - et1-vpp-mongodb
+
+  # A MongoDB instance for the EMS of first energy trading company.
+  # It's used to store the connection informormation that is received from the plant operators connector.
+  et1-vpp-mongodb:
+    image: mongo:7.0.8
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret1234
+
+  # EDC Connector of the second energy trading company 
+  et2-connector:
+    build:
+      context: ./connectors
+      dockerfile: '/launchers/et-connector/Dockerfile'
+    ports:
+      - '38181:8181'  # Default API / Management API
+      - '38282:8282'  # Protocol API
+      - '38185:8185'  # Public Data Plane API
+      - '39191:9191'  # Control Plane API
+    env_file:
+      - './connectors/_demo/et2-connector/conf.env'
+    volumes:
+      - './connectors/_demo/et2-connector/config:/app/config'
+
+  et2-connector-app:
+    build:
+      context: ./frontends/et-connector-app
+      dockerfile: 'Dockerfile'
+      args:
+        - TARGET=et2
+    ports:
+      - "8030:8080"
+    depends_on:
+      - et2-connector
+      - et2-vpp-ems
+
+
+  # This is a simple Flask app that provides basic functionality of an EMS.
+  # It aggregates the data from the connected DERs perdiodiocally and sends control commands to them
+  et2-vpp-ems:
+    build:
+      context: ./backends/vpp-ems
+      dockerfile: 'Dockerfile'
+    ports:
+      - "6010:5000"
+    environment:
+      MONGODB_URI: mongodb://root:secret1234@et2-vpp-mongodb:27017/dspace?authSource=admin
+      LOG_LEVEL: INFO
+      PULL_INTERVAL_SECONDS: 10
+      HTTP_TIMEOUT_SECONDS: 2
+    depends_on:
+      - et2-vpp-mongodb
+
+  # A MongoDB instance for the EMS of first energy trading company.
+  # It's used to store the connection informormation that is received from the plant operators connector.
+  et2-vpp-mongodb:
+    image: mongo:7.0.8
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret1234
+
+
+  # This container setups the data offer at the DER connector. The policy defines that et1 can access the data offer and et2 can not.
+  init-container:
+    build:
+      context: ./connectors/_demo/init-container
+      dockerfile: Dockerfile
+    depends_on:
+      der-connector:
+        condition: service_healthy
+    volumes:
+      - './connectors/_demo/init-container/scripts:/scripts'
+
+  # ### DEBUGGING ###
+  # # Logs all incoming requests
+  # request-logger:
+  #   image: mendhak/http-https-echo:31
+  #   ports:
+  #     - '4000:4000'
+  #   environment:
+  #     HTTP_PORT: 4000

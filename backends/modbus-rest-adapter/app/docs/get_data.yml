@@ -1,0 +1,45 @@
+Retrieves data from the Modbus device
+---
+parameters: [ ]
+
+produces:
+  - application/json
+
+responses:
+  200:
+    description: Successful data retrieval
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            ACTIVE_POWER:
+              type: number
+              description: Active power value
+            ACTIVE_POWER_SET_POINT_PERCENT:
+              type: number
+              description: Active power set point percentage
+            AVAILABLE_ACTIVE_POWER:
+              type: number
+              description: Available active power
+            READY:
+              type: integer
+              description: Ready state (1 for ready)
+            SUPPLIED_INSTALLED_NOMINAL_ACTIVE_POWER:
+              type: number
+              description: Supplied installed nominal active power
+            WIND_SPEED:
+              type: number
+              description: Wind speed
+
+  # Error response definition (generic 500)
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              description: Error message

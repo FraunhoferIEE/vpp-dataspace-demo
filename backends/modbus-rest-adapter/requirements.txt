@@ -1,0 +1,6 @@
+Flask==3.0.2
+pymodbus==3.6.6
+flasgger==0.9.7b2
+setuptools
+marshmallow
+flask-cors==4.0.1

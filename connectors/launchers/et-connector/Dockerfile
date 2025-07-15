@@ -5,7 +5,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN chmod +x ./gradlew \
+RUN apk add --no-cache dos2unix \
+  && dos2unix ./gradlew \
+  && chmod +x ./gradlew \
   && ./gradlew clean launchers:et-connector:build
 
 FROM eclipse-temurin:17-jdk-alpine

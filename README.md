@@ -1,6 +1,6 @@
 # Demonstator: Building a VPP using dataspace technlogies
 
-This repository contains the soruce code to build and deploy a small scale dataspace. The demonstator showcases how the EDC connector technology can be used to simply the migration of DERs between VPPs.
+This repository contains the source code to build and deploy a small scale dataspace. The demonstator showcases how the EDC connector technology can be used to simply the migration of DERs between VPPs.
 
 ## Prerequirements
 

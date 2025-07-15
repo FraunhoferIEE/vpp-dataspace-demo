@@ -4,8 +4,8 @@ This repository contains the soruce code to build and deploy a small scale datas
 
 ## Prerequirements
 
-- Docker
-- Java
+- Docker Desktop
+- Java 17+
 - Maven
 
 

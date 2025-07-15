@@ -1,5 +1,5 @@
 # First stage: Build jar
-FROM openjdk:17-slim-buster AS builder
+FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -7,13 +7,9 @@ COPY . .
 
 RUN ./gradlew clean launchers:et-connector:build
 
-FROM openjdk:17-slim-buster
+FROM eclipse-temurin:17-jdk-alpine
 
-RUN apt update \
-  && apt install -y curl \
-  && apt install -y inetutils-ping \
-  && apt install -y jq \
-  && rm -rf /var/cache/apt/archives /var/lib/apt/listss
+RUN apk add --no-cache curl iputils jq
 
 WORKDIR /app
 COPY --from=builder /app/launchers/et-connector/build/libs/connector.jar /app/connector.jar

@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./gradlew clean launchers:et-connector:build
+RUN chmod +x ./gradlew \
+  && ./gradlew clean launchers:et-connector:build
 
 FROM eclipse-temurin:17-jdk-alpine
 
